@@ -14,11 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python deps first (better layer caching)
-COPY requirements.txt .
+COPY app/requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy app code
-COPY . .
+COPY app/ ./app 
 ENV PYTHONPATH=/app
 # Expose the port your app will listen on
 ENV PORT=8080
