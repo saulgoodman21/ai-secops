@@ -11,8 +11,10 @@ phases:
     commands:
       - pip install -r app/requirements.txt
       - pip install pytest bandit safety trufflehog
-      - curl -fsSL https://get.docker.com | sh
-      - echo "Build env ready"
+      # - curl -fsSL https://get.docker.com | sh
+      # - echo "Build env ready"
+      # optional sanity check:
+      - docker --version
   pre_build:
     commands:
       - pytest -q
