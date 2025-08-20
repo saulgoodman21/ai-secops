@@ -32,6 +32,7 @@ phases:
       - python scripts/check_ecr_scan.py  # poll ECR scan; fail on High/Critical
 artifacts:
   files:
+    - imagedefinitions.json
     - bandit.json
     - safety.json
     - secrets.json
