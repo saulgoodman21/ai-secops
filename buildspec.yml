@@ -44,7 +44,7 @@ phases:
       - aws ecr start-image-scan --repository-name $IMAGE_NAME --image-id imageTag=$CODEBUILD_RESOLVED_SOURCE_VERSION
       # Poll scan results & fail on High/Critical findings
       - python scripts/check_ecr_scan.py
-
+      - printf '[{"name":"%s","imageUri":"%s"}]' $IMAGE_NAME $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
