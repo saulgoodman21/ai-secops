@@ -1,38 +1,96 @@
 version: 0.2
+
 env:
   variables:
-    IMAGE_NAME: "ai-secops"
     AWS_REGION: "eu-north-1"
-    ECR_URI: "701849096530.dkr.ecr.eu-north-1.amazonaws.com/ai-secops"
+    IMAGE_NAME: "ai-secops-app"
+    ECR_URI: "701849096530.dkr.ecr.eu-north-1.amazonaws.com/ai-secops-app"
+
 phases:
   install:
     runtime-versions:
       python: 3.11
     commands:
+      - echo "Installing dependencies..."
       - pip install -r app/requirements.txt
       - pip install pytest bandit safety trufflehog
-      # - curl -fsSL https://get.docker.com | sh
-      # - echo "Build env ready"
-      # optional sanity check:
-      - docker --version
+
   pre_build:
     commands:
+      - echo "Running tests and security gates..."
+      # 1. Unit tests
       - pytest -q
+      # 2. Static Application Security Testing (SAST)
       - bandit -r app -ll -f json -o bandit.json || true
-      - safety check --json > safety.json || true
-      - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
-      - python scripts/evaluate_gates.py   # exits non-zero on High/Critical
+      # 3. Software Composition Analysis (SCA)
+      - safety check --full-report --json > safety.json || true
+      # 4. Secret scanning
+      - trufflehog filesystem --directory . --json > secrets.json || true
+      # 5. Evaluate gates (fails if HIGH/CRITICAL issues found)
+      - python scripts/evaluate_gates.py
+      - 'printf "[{\"name\":\"%s\",\"imageUri\":\"%s\"}]" $IMAGE_NAME $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions.json'
+
+
   build:
     commands:
+      - echo "Building and pushing Docker image..."
+      # Authenticate with ECR
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+      # Build Docker image
       - docker build -t $IMAGE_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      # Tag for ECR
       - docker tag $IMAGE_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      # Push to ECR
       - docker push $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      # Trigger ECR image scan
       - aws ecr start-image-scan --repository-name $IMAGE_NAME --image-id imageTag=$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - python scripts/check_ecr_scan.py  # poll ECR scan; fail on High/Critical
+      # Poll scan results & fail on High/Critical findings
+      - python scripts/check_ecr_scan.py
+
 artifacts:
   files:
     - imagedefinitions.json
     - bandit.json
     - safety.json
     - secrets.json
+
+
+
+# version: 0.2
+# env:
+#   variables:
+#     IMAGE_NAME: "ai-secops"
+#     AWS_REGION: "eu-north-1"
+#     ECR_URI: "701849096530.dkr.ecr.eu-north-1.amazonaws.com/ai-secops"
+# phases:
+#   install:
+#     runtime-versions:
+#       python: 3.11
+#     commands:
+#       - pip install -r app/requirements.txt
+#       - pip install pytest bandit safety trufflehog
+#       # - curl -fsSL https://get.docker.com | sh
+#       # - echo "Build env ready"
+#       # optional sanity check:
+#       - docker --version
+#   pre_build:
+#     commands:
+#       - pytest -q
+#       - bandit -r app -ll -f json -o bandit.json || true
+#       - safety check --json > safety.json || true
+#       - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
+#       - python scripts/evaluate_gates.py   # exits non-zero on High/Critical
+#   build:
+#     commands:
+#       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+#       - docker build -t $IMAGE_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+#       - docker tag $IMAGE_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+#       - docker push $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+#       - aws ecr start-image-scan --repository-name $IMAGE_NAME --image-id imageTag=$CODEBUILD_RESOLVED_SOURCE_VERSION
+#       - python scripts/check_ecr_scan.py  # poll ECR scan; fail on High/Critical
+# artifacts:
+#   files:
+#     - imagedefinitions.json
+#     - bandit.json
+#     - safety.json
+#     - secrets.json
