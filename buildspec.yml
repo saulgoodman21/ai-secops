@@ -21,7 +21,7 @@ phases:
       - pytest -q
       - bandit -r app -ll -f json -o bandit.json || true
       - safety check --json > safety.json || true
-      - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
+      - trufflehog filesystem --no-history --json . > secrets.json || true # - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
       - python scripts/evaluate_gates.py   # exits non-zero on High/Critical
   build:
     commands:
