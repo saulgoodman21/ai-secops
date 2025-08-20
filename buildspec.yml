@@ -37,13 +37,15 @@ phases:
       # - cat imagedefinitions.json   # Debugging: confirm file content
   post_build:
     commands:
-      - python - <<'PY' > imagedefinitions.json
-  import json, os
-  print(json.dumps([{
-    "name": os.environ["CONTAINER_NAME"],
-    "imageUri": f'{os.environ["ECR_URI"]}:{os.environ["CODEBUILD_RESOLVED_SOURCE_VERSION"]}'
-  }]))
-  PY
+      - |
+        python - <<'PY' > imagedefinitions.json
+        import json, os
+        obj = [{
+          "name": os.environ["CONTAINER_NAME"],
+          "imageUri": f'{os.environ["ECR_URI"]}:{os.environ["CODEBUILD_RESOLVED_SOURCE_VERSION"]}'
+        }]
+        print(json.dumps(obj))
+        PY
       - echo "----- imagedefinitions.json -----"
       - cat imagedefinitions.json
 
