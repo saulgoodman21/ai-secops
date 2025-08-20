@@ -2,6 +2,7 @@ version: 0.2
 env:
   variables:
     IMAGE_NAME: "ai-secops"
+    CONTAINER_NAME: "app"  #new Added
     AWS_REGION: "eu-north-1"
     ECR_URI: "701849096530.dkr.ecr.eu-north-1.amazonaws.com/ai-secops"
 phases:
@@ -30,11 +31,24 @@ phases:
       - docker push $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
       - aws ecr start-image-scan --repository-name $IMAGE_NAME --image-id imageTag=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - python scripts/check_ecr_scan.py  # poll ECR scan; fail on High/Critical
+  # post_build:
+  #   commands:
+      # - echo '[{"name":"'"$IMAGE_NAME"'","imageUri":"'"$ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION"'"}]' > imagedefinitions.json
+      # - cat imagedefinitions.json   # Debugging: confirm file content
   post_build:
     commands:
-      - echo '[{"name":"'"$IMAGE_NAME"'","imageUri":"'"$ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION"'"}]' > imagedefinitions.json
-      - cat imagedefinitions.json   # Debugging: confirm file content
-      
+      - python - <<'PY' > imagedefinitions.json
+  import json, os
+  print(json.dumps([{
+    "name": os.environ["CONTAINER_NAME"],
+    "imageUri": f'{os.environ["ECR_URI"]}:{os.environ["CODEBUILD_RESOLVED_SOURCE_VERSION"]}'
+  }]))
+  PY
+      - echo "----- imagedefinitions.json -----"
+      - cat imagedefinitions.json
+
+
+
 artifacts:
   files:
     - imagedefinitions.json
