@@ -28,7 +28,7 @@ phases:
       - trufflehog filesystem --directory . --json > secrets.json || true
       # 5. Evaluate gates (fails if HIGH/CRITICAL issues found)
       - python scripts/evaluate_gates.py
-      - 'printf "[{\"name\":\"%s\",\"imageUri\":\"%s\"}]" $IMAGE_NAME $ECR_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions.json'
+
 
 
   build:
