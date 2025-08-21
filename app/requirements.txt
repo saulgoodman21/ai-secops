@@ -3,3 +3,4 @@ uvicorn[standard]
 requests
 pydantic
 # scanners used at build-time (not needed at runtime):
+requests==2.19.0
