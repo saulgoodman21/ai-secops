@@ -1,5 +1,5 @@
 fastapi
 uvicorn[standard]
-requests==2.19.0
+requests
 pydantic
 # scanners used at build-time (not needed at runtime):
