@@ -1,5 +1,5 @@
 # --- Dockerfile ---
-FROM python:3.7-slim
+FROM python:3.11-slim
 
 # Avoid prompts & keep image small
 ENV PYTHONDONTWRITEBYTECODE=1 \
