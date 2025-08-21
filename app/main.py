@@ -17,3 +17,8 @@ def predict(item: TextIn):
     start = time.time()
     pred = "positive" if len(item.text) % 2 == 0 else "negative"
     return {"label": pred, "score": 0.9, "duration_ms": int((time.time()-start)*1000)}
+
+@app.get("/danger")
+def danger():
+    # insecure code
+    return eval("2+2")
