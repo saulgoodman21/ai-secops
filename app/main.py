@@ -19,10 +19,3 @@ def predict(item: TextIn):
     start = time.time()
     pred = "positive" if len(item.text) % 2 == 0 else "negative"
     return {"label": pred, "score": 0.9, "duration_ms": int((time.time()-start)*1000)}
-
-@app.get("/danger")
-def danger(q: str = Query(...)):
-    # two bad patterns: MEDIUM (eval) + HIGH (shell=True)
-    eval(q)
-    subprocess.Popen("echo 1", shell=True)  # B602/B604 HIGH
-    return {"ok": True}
