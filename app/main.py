@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, constr
+from fastapi import Query #newly added
 import time
 
 app = FastAPI()
@@ -19,6 +20,6 @@ def predict(item: TextIn):
     return {"label": pred, "score": 0.9, "duration_ms": int((time.time()-start)*1000)}
 
 @app.get("/danger")
-def danger():
-    # insecure code
-    return eval("2+2")
+def danger(q: str = Query(...)):
+    # very insecure on purpose
+    return eval(q)
