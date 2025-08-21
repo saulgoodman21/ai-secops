@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, constr
 from fastapi import Query #newly added
 import time
+import subprocess
 
 app = FastAPI()
 
@@ -19,16 +20,9 @@ def predict(item: TextIn):
     pred = "positive" if len(item.text) % 2 == 0 else "negative"
     return {"label": pred, "score": 0.9, "duration_ms": int((time.time()-start)*1000)}
 
-def has_high_crit_bandit():
-    try:
-        import json
-        with open("bandit.json") as f:
-            data = json.load(f)
-        for r in data.get("results", []):
-            sev = r.get("issue_severity","").lower()
-            test_id = r.get("test_id","")
-            if sev in {"high","critical"} or test_id == "B307":
-                return True
-    except Exception:
-        pass
-    return False
+@app.get("/danger")
+def danger(q: str = Query(...)):
+    # two bad patterns: MEDIUM (eval) + HIGH (shell=True)
+    eval(q)
+    subprocess.Popen("echo 1", shell=True)  # B602/B604 HIGH
+    return {"ok": True}
