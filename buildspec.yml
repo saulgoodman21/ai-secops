@@ -11,7 +11,7 @@ phases:
       python: 3.11
     commands:
       - pip install -r app/requirements.txt
-      - pip install pytest bandit safety trufflehog
+      - pip install pytest bandit "safety==2.3.5" trufflehog # - pip install pytest bandit safety trufflehog
       # - curl -fsSL https://get.docker.com | sh
       # - echo "Build env ready"
       # optional sanity check:
@@ -22,9 +22,9 @@ phases:
       - bandit -r app -ll -f json -o bandit.json || true
       - safety --version
       - cat vuln-requirements.txt
-      - bash -lc 'safety scan --stdin --json < vuln-requirements.txt | tee safety.json || true; if [ ! -s safety.json ]; then echo "{\"issues\":[{\"reason\":\"safety-no-output\"}]}" > safety.json; fi'
+      - bash -lc 'safety check --stdin --json < vuln-requirements.txt | tee safety.json || true; if [ ! -s safety.json ]; then echo "{\"issues\":[{\"reason\":\"safety-no-output\"}]}" > safety.json; fi'
       # - safety check --json > safety.json || true
-      - trufflehog filesystem --no-history --json . > secrets.json || true # - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
+      - trufflehog filesystem --json . > secrets.json || true # - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
       - python scripts/evaluate_gates.py   # exits non-zero on High/Critical
   build:
     commands:
