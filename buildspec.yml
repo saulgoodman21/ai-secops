@@ -20,6 +20,8 @@ phases:
     commands:
       - pytest -q
       - bandit -r app -ll -f json -o bandit.json || true
+      - safety --version
+      - cat vuln-requirements.txt
       - bash -lc 'safety scan --stdin --json < vuln-requirements.txt | tee safety.json || true; if [ ! -s safety.json ]; then echo "{\"issues\":[{\"reason\":\"safety-no-output\"}]}" > safety.json; fi'
       # - safety check --json > safety.json || true
       - trufflehog filesystem --no-history --json . > secrets.json || true # - trufflehog filesystem --path . --json > secrets.json || true # - trufflehog filesystem --directory . --json > secrets.json || true
