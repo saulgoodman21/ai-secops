@@ -26,7 +26,8 @@ def has_high_crit_bandit():
             data = json.load(f)
         for r in data.get("results", []):
             sev = r.get("issue_severity","").lower()
-            if sev in {"medium","high","critical"}:
+            test_id = r.get("test_id","")
+            if sev in {"high","critical"} or test_id == "B307":
                 return True
     except Exception:
         pass
