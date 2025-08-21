@@ -19,7 +19,15 @@ def predict(item: TextIn):
     pred = "positive" if len(item.text) % 2 == 0 else "negative"
     return {"label": pred, "score": 0.9, "duration_ms": int((time.time()-start)*1000)}
 
-@app.get("/danger")
-def danger(q: str = Query(...)):
-    # very insecure on purpose
-    return eval(q)
+def has_high_crit_bandit():
+    try:
+        import json
+        with open("bandit.json") as f:
+            data = json.load(f)
+        for r in data.get("results", []):
+            sev = r.get("issue_severity","").lower()
+            if sev in {"medium","high","critical"}:
+                return True
+    except Exception:
+        pass
+    return False
