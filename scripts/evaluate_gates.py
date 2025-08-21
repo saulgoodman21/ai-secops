@@ -1,4 +1,14 @@
 import json, sys
+def load_json(path):
+    import json, sys
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"ERROR: could not read {path}: {e}")
+        # Treat unreadable report as a failure signal
+        print("Gate failed: REPORT_UNREADABLE")
+        sys.exit(1)
 
 def bandit_summary(path="bandit.json"):
     try:
